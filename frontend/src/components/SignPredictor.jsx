@@ -2,10 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useHandTracking } from '../hooks/useHandTracking';
 
 const K = 5;
-const DIST_THRESHOLD = 0.35;
+const DIST_THRESHOLD = 0.3;   // nghiêm ngặt hơn, giảm nhận nhầm
 const DATASET_URL = '/data/sign_alphabet_dataset.json';
-const CONFIRM_FRAMES = 12;   // số frame giữ ổn định 1 chữ trước khi thêm vào chuỗi
-const COOLDOWN_MS = 800;     // nghỉ sau khi thêm 1 ký tự, tránh gõ lặp liên tục
+const CONFIRM_FRAMES = 36;    // ~0.8s giữ ổn định mới commit, cho bạn thời gian phản ứng/rút tay
+const COOLDOWN_MS = 900;      // nghỉ sau khi thêm 1 ký tự, tránh gõ lặp liên tục
 
 function extractFeatures(results) {
     const empty = new Array(63).fill(0);
@@ -62,6 +62,8 @@ export default function SignPredictor() {
     const [prediction, setPrediction] = useState(null);
     const [distance, setDistance] = useState(null);
     const [text, setText] = useState('');
+    const [pendingLabel, setPendingLabel] = useState(null);
+    const [pendingProgress, setPendingProgress] = useState(0); // 0 -> 1
 
     useEffect(() => {
         fetch(DATASET_URL)
@@ -90,6 +92,25 @@ export default function SignPredictor() {
             setText(prev => prev + lb);
         }
     }
+
+    // Xoá nhanh bằng bàn phím, không cần ra hình tay "delete"
+    useEffect(() => {
+        function handleKeyDown(e) {
+            if (e.key === 'Backspace') {
+                e.preventDefault();
+                setText(prev => prev.slice(0, -1));
+            } else if (e.key === 'Escape') {
+                // Huỷ ký tự đang chờ xác nhận ngay lập tức (hạ tay xuống cũng được, đây là cách nhanh hơn)
+                /* eslint-disable-next-line react-hooks/refs */
+                stableLabelRef.current = null;
+                stableCountRef.current = 0;
+                setPendingLabel(null);
+                setPendingProgress(0);
+            }
+        }
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     const onResults = useCallback((results) => {
         const canvas = canvasRef.current;
@@ -129,6 +150,8 @@ export default function SignPredictor() {
         if (!valid) {
             stableLabelRef.current = null;
             stableCountRef.current = 0;
+            setPendingLabel(null);
+            setPendingProgress(0);
             return;
         }
 
@@ -139,9 +162,20 @@ export default function SignPredictor() {
             stableCountRef.current = 1;
         }
 
-        if (stableCountRef.current === CONFIRM_FRAMES && now >= cooldownUntilRef.current) {
+        const inCooldown = now < cooldownUntilRef.current;
+        if (inCooldown) {
+            setPendingLabel(null);
+            setPendingProgress(0);
+        } else {
+            setPendingLabel(lb);
+            setPendingProgress(Math.min(stableCountRef.current / CONFIRM_FRAMES, 1));
+        }
+
+        if (stableCountRef.current === CONFIRM_FRAMES && !inCooldown) {
             commitLabel(lb);
             cooldownUntilRef.current = now + COOLDOWN_MS;
+            setPendingLabel(null);
+            setPendingProgress(0);
         }
         /* eslint-enable react-hooks/refs */
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -154,7 +188,7 @@ export default function SignPredictor() {
         const utter = new SpeechSynthesisUtterance(text);
         utter.lang = 'vi-VN'; // đổi thành 'en-US' nếu ghép tên tiếng Anh
         utter.rate = 0.9;
-        window.speechSynthesis.cancel(); // huỷ câu đang đọc dở nếu có
+        window.speechSynthesis.cancel();
         window.speechSynthesis.speak(utter);
     }
 
@@ -181,11 +215,29 @@ export default function SignPredictor() {
                 </div>
             )}
 
-            <div style={{ position: 'absolute', top: 14, left: 14, background: 'rgba(0,0,0,0.7)', padding: '10px 20px', borderRadius: 10, color: '#fff', fontFamily: 'sans-serif' }}>
+            <div style={{ position: 'absolute', top: 14, left: 14, background: 'rgba(0,0,0,0.7)', padding: '10px 20px', borderRadius: 10, color: '#fff', fontFamily: 'sans-serif', minWidth: 140 }}>
                 <div style={{ fontSize: 48, fontWeight: 800, textAlign: 'center' }}>{prediction ?? '—'}</div>
                 <div style={{ fontSize: 11, color: '#94a3b8', textAlign: 'center' }}>
                     khoảng cách: {distance !== null && distance !== Infinity ? distance.toFixed(3) : '-'}
                 </div>
+
+                {/* Progress bar xác nhận: cho thấy chữ sắp được thêm và còn bao lâu.
+                    Rút tay ra hoặc đổi hình tay khác để huỷ nếu thấy sai. */}
+                {pendingLabel && (
+                    <div style={{ marginTop: 8 }}>
+                        <div style={{ fontSize: 11, color: '#fbbf24', textAlign: 'center', marginBottom: 4 }}>
+                            sắp thêm "{pendingLabel}"...
+                        </div>
+                        <div style={{ height: 6, background: '#334155', borderRadius: 4, overflow: 'hidden' }}>
+                            <div style={{
+                                height: '100%',
+                                width: `${pendingProgress * 100}%`,
+                                background: '#fbbf24',
+                                transition: 'width 0.05s linear'
+                            }} />
+                        </div>
+                    </div>
+                )}
             </div>
 
             <div style={{ position: 'absolute', bottom: 14, left: 14, right: 14, background: 'rgba(0,0,0,0.7)', padding: 12, borderRadius: 10, color: '#fff', fontFamily: 'sans-serif' }}>
@@ -197,7 +249,7 @@ export default function SignPredictor() {
                     <button onClick={clearText}>🗑 Xoá chuỗi</button>
                 </div>
                 <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>
-                    Giữ yên hình tay ~0.4s để thêm 1 chữ • ra hình "delete" để xoá ký tự cuối • "space" để cách chữ
+                    Giữ yên hình tay ~0.8s để thêm 1 chữ (xem thanh vàng phía trên) • nhấn <b>Backspace</b> để xoá nhanh ký tự cuối • <b>Esc</b> để huỷ chữ đang chờ xác nhận
                 </div>
             </div>
         </div>
