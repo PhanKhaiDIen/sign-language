@@ -35,11 +35,11 @@ export default function SignCanvas() {
     }, [dataset]);
 
     // Refs dùng cho vòng lặp xử lý frame realtime (MediaPipe)
-    /* eslint-disable react-hooks/refs */
+
     const captureBuffer = useRef([]);
     const recordingRef = useRef(false);
     const recordingLabelRef = useRef(LETTERS[0]);
-    /* eslint-enable react-hooks/refs */
+
 
     function extractFeatures(results) {
         const empty = new Array(63).fill(0);
@@ -57,18 +57,16 @@ export default function SignCanvas() {
     }
 
     function finishRecording(recordedLabel) {
-        /* eslint-disable-next-line react-hooks/refs */
         recordingRef.current = false;
         setIsRecording(false);
         setBufferCount(0);
 
-        /* eslint-disable-next-line react-hooks/refs */
         const frames = captureBuffer.current;
         const avg = new Array(126).fill(0);
         frames.forEach(f => f.forEach((v, i) => { avg[i] += v / frames.length; }));
 
         setDataset(prev => [...prev, { label: recordedLabel, features: avg }]);
-        /* eslint-disable-next-line react-hooks/refs */
+    
         captureBuffer.current = [];
     }
 
@@ -94,7 +92,7 @@ export default function SignCanvas() {
             });
         }
 
-        /* eslint-disable react-hooks/refs */
+    
         if (recordingRef.current) {
             captureBuffer.current.push(extractFeatures(results));
             setBufferCount(captureBuffer.current.length);
@@ -102,14 +100,12 @@ export default function SignCanvas() {
                 finishRecording(recordingLabelRef.current);
             }
         }
-        /* eslint-enable react-hooks/refs */
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     }, []);
 
     useHandTracking({ videoRef, onResults });
 
     function startCountdownThenRecord() {
-        /* eslint-disable-next-line react-hooks/refs */
         recordingLabelRef.current = label;
         let c = 2;
         setCountdown(c);
@@ -119,11 +115,10 @@ export default function SignCanvas() {
             if (c <= 0) {
                 clearInterval(timer);
                 setCountdown(0);
-                /* eslint-disable react-hooks/refs */
                 captureBuffer.current = [];
                 setBufferCount(0);
                 recordingRef.current = true;
-                /* eslint-enable react-hooks/refs */
+
                 setIsRecording(true);
             }
         }, 700);

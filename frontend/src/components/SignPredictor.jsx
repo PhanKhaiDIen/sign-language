@@ -72,14 +72,13 @@ export default function SignPredictor() {
             .catch(err => setLoadError(err.message));
     }, []);
 
-    /* eslint-disable react-hooks/refs */
+    
     const datasetRef = useRef(null);
     useEffect(() => { datasetRef.current = dataset; }, [dataset]);
 
     const stableLabelRef = useRef(null);
     const stableCountRef = useRef(0);
     const cooldownUntilRef = useRef(0);
-    /* eslint-enable react-hooks/refs */
 
     function commitLabel(lb) {
         if (lb === 'space') {
@@ -101,7 +100,6 @@ export default function SignPredictor() {
                 setText(prev => prev.slice(0, -1));
             } else if (e.key === 'Escape') {
                 // Huỷ ký tự đang chờ xác nhận ngay lập tức (hạ tay xuống cũng được, đây là cách nhanh hơn)
-                /* eslint-disable-next-line react-hooks/refs */
                 stableLabelRef.current = null;
                 stableCountRef.current = 0;
                 setPendingLabel(null);
@@ -133,8 +131,6 @@ export default function SignPredictor() {
                 window.drawLandmarks(ctx, flipped, { color: '#fff', radius: 3 });
             });
         }
-
-        /* eslint-disable-next-line react-hooks/refs */
         const ds = datasetRef.current;
         if (!ds || ds.length === 0) return;
 
@@ -145,7 +141,6 @@ export default function SignPredictor() {
         setPrediction(valid ? lb : null);
         setDistance(dist);
 
-        /* eslint-disable react-hooks/refs */
         const now = Date.now();
         if (!valid) {
             stableLabelRef.current = null;
@@ -177,8 +172,6 @@ export default function SignPredictor() {
             setPendingLabel(null);
             setPendingProgress(0);
         }
-        /* eslint-enable react-hooks/refs */
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useHandTracking({ videoRef, onResults });
