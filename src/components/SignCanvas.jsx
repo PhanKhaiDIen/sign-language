@@ -19,6 +19,7 @@ function countByLabel(dataset) {
 export default function SignCanvas() {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
+    const fileInputRef = useRef(null); // Ref dùng cho input file ẩn
 
     const [label, setLabel] = useState(LETTERS[0]);
     const [isRecording, setIsRecording] = useState(false);
@@ -33,8 +34,7 @@ export default function SignCanvas() {
         localStorage.setItem('signDataset', JSON.stringify(dataset));
     }, [dataset]);
 
-    // Refs dùng cho vòng lặp xử lý frame realtime (MediaPipe) — không được phép
-    // trigger re-render mỗi frame, nên cố tình đứng ngoài chu trình render chuẩn của React.
+    // Refs dùng cho vòng lặp xử lý frame realtime (MediaPipe)
     /* eslint-disable react-hooks/refs */
     const captureBuffer = useRef([]);
     const recordingRef = useRef(false);
@@ -137,18 +137,44 @@ export default function SignCanvas() {
         a.click();
     }
 
+    // --- THÊM HÀM IMPORT Ở ĐÂY ---
+    function handleFileImport(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const importedData = JSON.parse(e.target.result);
+                if (Array.isArray(importedData)) {
+                    // Nối dữ liệu mới vào dataset hiện tại để mở rộng
+                    setDataset(prev => [...prev, ...importedData]);
+                    alert(`Đã import thành công ${importedData.length} mẫu!`);
+                } else {
+                    alert('Lỗi: File JSON không đúng định dạng (cần là một mảng).');
+                }
+            } catch (error) {
+                alert('Lỗi khi đọc file JSON: ' + error.message);
+            }
+            // Reset input để có thể import cùng 1 file nhiều lần nếu muốn
+            event.target.value = null; 
+        };
+        reader.readAsText(file);
+    }
+
     function clearDataset() {
         if (!confirm('Xoá hết dữ liệu?')) return;
         setDataset([]);
     }
+
     function undoLastSample() {
-    setDataset(prev => {
-        if (prev.length === 0) return prev;
-        const last = prev[prev.length - 1];
-        if (!confirm(`Xoá mẫu cuối cùng (nhãn "${last.label}")?`)) return prev;
-        return prev.slice(0, -1);
-    });
-}
+        setDataset(prev => {
+            if (prev.length === 0) return prev;
+            const last = prev[prev.length - 1];
+            if (!confirm(`Xoá mẫu cuối cùng (nhãn "${last.label}")?`)) return prev;
+            return prev.slice(0, -1);
+        });
+    }
 
     return (
         <div style={{ position: 'relative', width: '90vw', maxWidth: 1280, aspectRatio: '16/9', margin: '0 auto', borderRadius: 12, overflow: 'hidden' }}>
@@ -176,6 +202,18 @@ export default function SignCanvas() {
                     <button onClick={startCountdownThenRecord} disabled={isRecording}>🔴 Ghi mẫu "{label}"</button>
                     <button onClick={undoLastSample} disabled={isRecording || totalSamples === 0}>↩️ Xoá mẫu cuối</button>
                     <span>Tổng: {totalSamples} mẫu</span>
+                    
+                    {/* Thẻ input ẩn để chọn file */}
+                    <input 
+                        type="file" 
+                        accept=".json" 
+                        ref={fileInputRef} 
+                        style={{ display: 'none' }} 
+                        onChange={handleFileImport} 
+                    />
+                    {/* Nút bấm để kích hoạt thẻ input ẩn */}
+                    <button onClick={() => fileInputRef.current?.click()}>📂 Import JSON</button>
+                    
                     <button onClick={downloadDataset}>💾 Tải dataset.json</button>
                     <button onClick={clearDataset}>🗑 Xoá hết</button>
                 </div>
