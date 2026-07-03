@@ -4,6 +4,8 @@ import { useHandTracking } from '../hooks/useHandTracking';
 const K = 5;
 const DIST_THRESHOLD = 0.35;
 const DATASET_URL = '/data/sign_alphabet_dataset.json';
+const CONFIRM_FRAMES = 12;   // số frame giữ ổn định 1 chữ trước khi thêm vào chuỗi
+const COOLDOWN_MS = 800;     // nghỉ sau khi thêm 1 ký tự, tránh gõ lặp liên tục
 
 function extractFeatures(results) {
     const empty = new Array(63).fill(0);
@@ -13,7 +15,6 @@ function extractFeatures(results) {
         const handedness = results.multiHandedness[i].label;
         const wrist = lm[0];
         const norm = lm.flatMap(p => [p.x - wrist.x, p.y - wrist.y, p.z - wrist.z]);
-        // Giữ đúng logic hoán đổi giống lúc ghi mẫu để feature khớp nhau
         if (handedness === 'Left') rightFeat = norm;
         else leftFeat = norm;
     });
@@ -45,8 +46,8 @@ function knnPredict(features, dataset, k = K) {
     nearest.forEach(n => { votes[n.label] = (votes[n.label] || 0) + 1; });
 
     let bestLabel = null, bestVotes = -1;
-    Object.entries(votes).forEach(([label, count]) => {
-        if (count > bestVotes) { bestVotes = count; bestLabel = label; }
+    Object.entries(votes).forEach(([lb, count]) => {
+        if (count > bestVotes) { bestVotes = count; bestLabel = lb; }
     });
 
     return { label: bestLabel, distance: nearest[0].dist };
@@ -60,13 +61,11 @@ export default function SignPredictor() {
     const [loadError, setLoadError] = useState(null);
     const [prediction, setPrediction] = useState(null);
     const [distance, setDistance] = useState(null);
+    const [text, setText] = useState('');
 
     useEffect(() => {
         fetch(DATASET_URL)
-            .then(res => {
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                return res.json();
-            })
+            .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
             .then(data => setDataset(data))
             .catch(err => setLoadError(err.message));
     }, []);
@@ -74,7 +73,23 @@ export default function SignPredictor() {
     /* eslint-disable react-hooks/refs */
     const datasetRef = useRef(null);
     useEffect(() => { datasetRef.current = dataset; }, [dataset]);
+
+    const stableLabelRef = useRef(null);
+    const stableCountRef = useRef(0);
+    const cooldownUntilRef = useRef(0);
     /* eslint-enable react-hooks/refs */
+
+    function commitLabel(lb) {
+        if (lb === 'space') {
+            setText(prev => prev + ' ');
+        } else if (lb === 'delete') {
+            setText(prev => prev.slice(0, -1));
+        } else if (lb === 'idle') {
+            // idle không làm gì cả
+        } else {
+            setText(prev => prev + lb);
+        }
+    }
 
     const onResults = useCallback((results) => {
         const canvas = canvasRef.current;
@@ -103,24 +118,54 @@ export default function SignPredictor() {
         if (!ds || ds.length === 0) return;
 
         const features = extractFeatures(results);
-        const { label, distance: dist } = knnPredict(features, ds);
+        const { label: lb, distance: dist } = knnPredict(features, ds);
+        const valid = lb && dist <= DIST_THRESHOLD;
 
-        if (label && dist <= DIST_THRESHOLD) {
-            setPrediction(label);
-        } else {
-            setPrediction(null);
-        }
+        setPrediction(valid ? lb : null);
         setDistance(dist);
+
+        /* eslint-disable react-hooks/refs */
+        const now = Date.now();
+        if (!valid) {
+            stableLabelRef.current = null;
+            stableCountRef.current = 0;
+            return;
+        }
+
+        if (lb === stableLabelRef.current) {
+            stableCountRef.current += 1;
+        } else {
+            stableLabelRef.current = lb;
+            stableCountRef.current = 1;
+        }
+
+        if (stableCountRef.current === CONFIRM_FRAMES && now >= cooldownUntilRef.current) {
+            commitLabel(lb);
+            cooldownUntilRef.current = now + COOLDOWN_MS;
+        }
+        /* eslint-enable react-hooks/refs */
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useHandTracking({ videoRef, onResults });
 
+    function speakText() {
+        if (!text.trim()) return;
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = 'vi-VN'; // đổi thành 'en-US' nếu ghép tên tiếng Anh
+        utter.rate = 0.9;
+        window.speechSynthesis.cancel(); // huỷ câu đang đọc dở nếu có
+        window.speechSynthesis.speak(utter);
+    }
+
+    function clearText() {
+        setText('');
+    }
+
     if (loadError) {
         return (
             <div style={{ color: '#ef4444', padding: 20 }}>
-                Không tải được dataset: {loadError}. Kiểm tra lại file có ở đúng
-                <code> public/data/sign_ABC_90samples.json</code> không.
+                Không tải được dataset: {loadError}
             </div>
         );
     }
@@ -136,16 +181,23 @@ export default function SignPredictor() {
                 </div>
             )}
 
-            <div style={{
-                position: 'absolute', top: 14, left: 14,
-                background: 'rgba(0,0,0,0.7)', padding: '10px 20px', borderRadius: 10,
-                color: '#fff', fontFamily: 'sans-serif'
-            }}>
-                <div style={{ fontSize: 48, fontWeight: 800, textAlign: 'center' }}>
-                    {prediction ?? '—'}
-                </div>
+            <div style={{ position: 'absolute', top: 14, left: 14, background: 'rgba(0,0,0,0.7)', padding: '10px 20px', borderRadius: 10, color: '#fff', fontFamily: 'sans-serif' }}>
+                <div style={{ fontSize: 48, fontWeight: 800, textAlign: 'center' }}>{prediction ?? '—'}</div>
                 <div style={{ fontSize: 11, color: '#94a3b8', textAlign: 'center' }}>
                     khoảng cách: {distance !== null && distance !== Infinity ? distance.toFixed(3) : '-'}
+                </div>
+            </div>
+
+            <div style={{ position: 'absolute', bottom: 14, left: 14, right: 14, background: 'rgba(0,0,0,0.7)', padding: 12, borderRadius: 10, color: '#fff', fontFamily: 'sans-serif' }}>
+                <div style={{ fontSize: 24, fontWeight: 700, minHeight: 32, letterSpacing: 2, marginBottom: 8 }}>
+                    {text || <span style={{ color: '#64748b' }}>...</span>}
+                </div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                    <button onClick={speakText}>🔊 Đọc tên</button>
+                    <button onClick={clearText}>🗑 Xoá chuỗi</button>
+                </div>
+                <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>
+                    Giữ yên hình tay ~0.4s để thêm 1 chữ • ra hình "delete" để xoá ký tự cuối • "space" để cách chữ
                 </div>
             </div>
         </div>
