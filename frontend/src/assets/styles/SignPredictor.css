@@ -1,10 +1,12 @@
 .predictor-page {
-  min-height: 100vh;
-  background: #0a0a0d;
-  padding: 40px 24px;
+  min-height: calc(100vh - 80px); /* trừ đi chiều cao Navbar */
+  background: #16161A;
+  padding: 20px 24px;
   font-family: 'Segoe UI', sans-serif;
   display: flex;
   justify-content: center;
+  align-items: flex-start;
+  box-sizing: border-box;
 }
 
 .predictor-layout {
@@ -13,6 +15,7 @@
   max-width: 1400px;
   width: 100%;
   align-items: stretch;
+  height: calc(100vh - 130px); /* chừa chỗ cho Navbar + padding */
 }
 
 /* ===== LEFT: Camera ===== */
@@ -23,7 +26,7 @@
   overflow: hidden;
   background: #000;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  aspect-ratio: 16 / 10;
+  height: 100%; /* thay vì dùng aspect-ratio, để nó lấp đầy chiều cao có sẵn */
 }
 
 .predictor-canvas {
@@ -90,6 +93,8 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  height: 100%;
+  overflow-y: auto; /* nếu nội dung dài, chỉ cuộn riêng sidebar */
 }
 
 .panel-card {
@@ -218,5 +223,10 @@
   }
   .side-panel {
     max-width: 100%;
+  }
+}
+@media (max-height: 700px) {
+  .predictor-layout {
+    height: calc(100vh - 100px);
   }
 }
