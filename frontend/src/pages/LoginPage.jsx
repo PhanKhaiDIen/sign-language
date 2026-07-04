@@ -24,7 +24,7 @@ export default function LoginPage() {
 
       login(data.user, data.token);
 
-      navigate("/");
+      navigate("/predictor");
     } catch (err) {
       setError(err.message || "Login failed");
     } finally {

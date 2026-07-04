@@ -16,7 +16,7 @@ export default function Navbar() {
   }
 
   const navLinks = [
-    { path: '/', label: 'Predictor' },
+    { path: '/predictor', label: 'Predictor' },
     { path: '/guide', label: 'Hướng dẫn' },
     { path: '/canvas', label: 'Ghi mẫu' },
   ];
