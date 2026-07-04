@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useHandTracking } from '../hooks/useHandTracking';
-
+import '../assets/styles/SignPredictor.css';
 const K = 5;
 const DIST_THRESHOLD = 0.3;   // nghiêm ngặt hơn, giảm nhận nhầm
 const DATASET_URL = '/data/sign_alphabet_dataset.json';
@@ -191,58 +191,71 @@ export default function SignPredictor() {
 
     if (loadError) {
         return (
-            <div style={{ color: '#ef4444', padding: 20 }}>
-                Không tải được dataset: {loadError}
+            <div className="predictor-page">
+                <div className="error-box-full">
+                    Không tải được dataset: {loadError}
+                </div>
             </div>
         );
     }
 
     return (
-        <div style={{ position: 'relative', width: '90vw', maxWidth: 1280, aspectRatio: '16/9', margin: '0 auto', borderRadius: 12, overflow: 'hidden' }}>
-            <video ref={videoRef} style={{ display: 'none' }} autoPlay playsInline />
-            <canvas ref={canvasRef} width={1280} height={720} style={{ width: '100%', height: '100%' }} />
+        <div className="predictor-page">
+            <div className="predictor-layout">
 
-            {!dataset && (
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-                    Đang tải dataset...
-                </div>
-            )}
+                {/* LEFT: Camera */}
+                <div className="camera-panel">
+                    <video ref={videoRef} style={{ display: 'none' }} autoPlay playsInline />
+                    <canvas ref={canvasRef} width={1280} height={720} className="predictor-canvas" />
 
-            <div style={{ position: 'absolute', top: 14, left: 14, background: 'rgba(0,0,0,0.7)', padding: '10px 20px', borderRadius: 10, color: '#fff', fontFamily: 'sans-serif', minWidth: 140 }}>
-                <div style={{ fontSize: 48, fontWeight: 800, textAlign: 'center' }}>{prediction ?? '—'}</div>
-                <div style={{ fontSize: 11, color: '#94a3b8', textAlign: 'center' }}>
-                    khoảng cách: {distance !== null && distance !== Infinity ? distance.toFixed(3) : '-'}
-                </div>
-
-                {/* Progress bar xác nhận: cho thấy chữ sắp được thêm và còn bao lâu.
-                    Rút tay ra hoặc đổi hình tay khác để huỷ nếu thấy sai. */}
-                {pendingLabel && (
-                    <div style={{ marginTop: 8 }}>
-                        <div style={{ fontSize: 11, color: '#fbbf24', textAlign: 'center', marginBottom: 4 }}>
-                            sắp thêm "{pendingLabel}"...
+                    {!dataset && (
+                        <div className="loading-overlay">
+                            Đang tải dataset...
                         </div>
-                        <div style={{ height: 6, background: '#334155', borderRadius: 4, overflow: 'hidden' }}>
-                            <div style={{
-                                height: '100%',
-                                width: `${pendingProgress * 100}%`,
-                                background: '#fbbf24',
-                                transition: 'width 0.05s linear'
-                            }} />
+                    )}
+
+                    <div className="rec-dot">LIVE</div>
+                </div>
+
+                {/* RIGHT: Sidebar */}
+                <div className="side-panel">
+
+                    <div className="panel-card prediction-card">
+                        <div className="panel-label">Nhận diện</div>
+                        <div className="prediction-letter">{prediction ?? '—'}</div>
+                        <div className="prediction-distance">
+                            distance: {distance !== null && distance !== Infinity ? distance.toFixed(3) : '-'}
+                        </div>
+
+                        {pendingLabel && (
+                            <div className="pending-box">
+                                <div className="pending-label">
+                                    sắp thêm "{pendingLabel}"...
+                                </div>
+                                <div className="pending-bar-track">
+                                    <div
+                                        className="pending-bar-fill"
+                                        style={{ width: `${pendingProgress * 100}%` }}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="panel-card text-card">
+                        <div className="panel-label">Kết quả</div>
+                        <div className="text-output">
+                            {text || <span className="text-placeholder">...</span>}
+                        </div>
+                        <div className="text-actions">
+                            <button onClick={speakText}>🔊 Đọc tên</button>
+                            <button onClick={clearText}>🗑 Xoá</button>
+                        </div>
+                        <div className="hint-text">
+                            Giữ yên hình tay ~0.8s để thêm 1 chữ • <b>Backspace</b> để xoá nhanh • <b>Esc</b> để huỷ chữ đang chờ
                         </div>
                     </div>
-                )}
-            </div>
 
-            <div style={{ position: 'absolute', bottom: 14, left: 14, right: 14, background: 'rgba(0,0,0,0.7)', padding: 12, borderRadius: 10, color: '#fff', fontFamily: 'sans-serif' }}>
-                <div style={{ fontSize: 24, fontWeight: 700, minHeight: 32, letterSpacing: 2, marginBottom: 8 }}>
-                    {text || <span style={{ color: '#64748b' }}>...</span>}
-                </div>
-                <div style={{ display: 'flex', gap: 10 }}>
-                    <button onClick={speakText}>🔊 Đọc tên</button>
-                    <button onClick={clearText}>🗑 Xoá chuỗi</button>
-                </div>
-                <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>
-                    Giữ yên hình tay ~0.8s để thêm 1 chữ (xem thanh vàng phía trên) • nhấn <b>Backspace</b> để xoá nhanh ký tự cuối • <b>Esc</b> để huỷ chữ đang chờ xác nhận
                 </div>
             </div>
         </div>
