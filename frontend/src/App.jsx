@@ -8,7 +8,7 @@ import SignCanvas from './components/SignCanvas';
 import GuidePage from './pages/GuidePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-
+import Footer from './components/Footer';
 export default function App() {
   return (
     <AuthProvider>
@@ -28,6 +28,9 @@ export default function App() {
               <ProtectedRoute><SignCanvas /></ProtectedRoute>
             } />
           </Routes>
+          <div>
+            <Footer />
+          </div>
         </div>
       </BrowserRouter>
     </AuthProvider>
