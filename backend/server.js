@@ -4,10 +4,11 @@ require('dotenv').config();
 const pool = require('./config/db');
 const authRoutes = require('./routes/auth');
 const signsRoutes = require('./routes/signs');
+const trainingRoutes = require('./routes/training');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 app.get('/api/health', async (req, res) => {
   try {
@@ -20,7 +21,7 @@ app.get('/api/health', async (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/signs', signsRoutes);
-
+app.use('/api/training-samples', trainingRoutes);
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

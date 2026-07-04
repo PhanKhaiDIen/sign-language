@@ -21,3 +21,32 @@ export async function loginUser(email, password) {
     if (!res.ok) throw new Error(data.message || 'Đăng nhập thất bại');
     return data;
 }
+export async function uploadTrainingSamples(samples, token) {
+  const res = await fetch(`${API_URL}/training-samples/bulk`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(samples)
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Upload thất bại');
+  return data;
+}
+
+export async function fetchTrainingSamples() {
+  const res = await fetch(`${API_URL}/training-samples`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+export async function clearTrainingSamples(token) {
+  const res = await fetch(`${API_URL}/training-samples`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Xóa thất bại');
+  return data;
+}

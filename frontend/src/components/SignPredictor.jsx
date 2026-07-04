@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useHandTracking } from '../hooks/useHandTracking';
 import '../assets/styles/SignPredictor.css';
-const K = 5;
-const DIST_THRESHOLD = 0.3;   // nghiêm ngặt hơn, giảm nhận nhầm
-const DATASET_URL = '/data/sign_alphabet_dataset.json';
+import { fetchTrainingSamples } from '../services/api';
+const K = 4;
+const DIST_THRESHOLD = 0.35;   // nghiêm ngặt hơn, giảm nhận nhầm
 const CONFIRM_FRAMES = 36;    // ~0.8s giữ ổn định mới commit, cho bạn thời gian phản ứng/rút tay
 const COOLDOWN_MS = 900;      // nghỉ sau khi thêm 1 ký tự, tránh gõ lặp liên tục
 
@@ -66,10 +66,9 @@ export default function SignPredictor() {
     const [pendingProgress, setPendingProgress] = useState(0); // 0 -> 1
 
     useEffect(() => {
-        fetch(DATASET_URL)
-            .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
-            .then(data => setDataset(data))
-            .catch(err => setLoadError(err.message));
+    fetchTrainingSamples()
+        .then(data => setDataset(data))
+        .catch(err => setLoadError(err.message));
     }, []);
 
     

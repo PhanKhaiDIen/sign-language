@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useHandTracking } from '../hooks/useHandTracking';
-
+import { uploadTrainingSamples } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 const HOLD_FRAMES = 15;
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const CONTROL_LABELS = ['space', 'delete', 'idle'];
 const ALL_LABELS = [...LETTERS, ...CONTROL_LABELS];
-
 function loadDataset() {
     return JSON.parse(localStorage.getItem('signDataset') || '[]');
 }
@@ -26,7 +26,8 @@ export default function SignCanvas() {
     const [countdown, setCountdown] = useState(0);
     const [bufferCount, setBufferCount] = useState(0);
     const [dataset, setDataset] = useState(loadDataset);
-
+    const { token, user } = useAuth();
+    const [syncStatus, setSyncStatus] = useState('');
     const counts = countByLabel(dataset);
     const totalSamples = dataset.length;
 
@@ -131,6 +132,25 @@ export default function SignCanvas() {
         a.download = 'sign_alphabet_dataset.json';
         a.click();
     }
+    async function syncToServer() {
+        if (!token) {
+            alert('Bạn cần đăng nhập để đồng bộ dataset lên server!');
+            return;
+        }
+        if (dataset.length === 0) {
+            alert('Chưa có dữ liệu để đồng bộ.');
+            return;
+        }
+        if (!confirm(`Đồng bộ ${dataset.length} mẫu lên server?`)) return;
+
+        setSyncStatus('Đang tải lên...');
+        try {
+            const result = await uploadTrainingSamples(dataset, token);
+            setSyncStatus(`✅ ${result.message}`);
+        } catch (err) {
+            setSyncStatus(`❌ Lỗi: ${err.message}`);
+        }
+    }
 
     // --- THÊM HÀM IMPORT Ở ĐÂY ---
     function handleFileImport(event) {
@@ -210,6 +230,8 @@ export default function SignCanvas() {
                     <button onClick={() => fileInputRef.current?.click()}>📂 Import JSON</button>
                     
                     <button onClick={downloadDataset}>💾 Tải dataset.json</button>
+                    <button onClick={syncToServer} disabled={isRecording || !user}>☁️ Đồng bộ lên server</button>
+                    {syncStatus && <span style={{ fontSize: 12 }}>{syncStatus}</span>}
                     <button onClick={clearDataset}>🗑 Xoá hết</button>
                 </div>
                 <div style={{ fontSize: 11, color: '#94a3b8' }}>
