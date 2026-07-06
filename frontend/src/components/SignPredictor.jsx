@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useHandTracking } from '../hooks/useHandTracking';
+import { Volume2, Trash2, Cpu, Layers, Keyboard, Sparkles, AlertTriangle, RefreshCw } from 'lucide-react';
 import '../assets/styles/SignPredictor.css';
 import { fetchTrainingSamples } from '../services/api';
+
 const K = 4;
-const DIST_THRESHOLD = 0.35;   // nghiêm ngặt hơn, giảm nhận nhầm
-const CONFIRM_FRAMES = 36;    // ~0.8s giữ ổn định mới commit, cho bạn thời gian phản ứng/rút tay
-const COOLDOWN_MS = 900;      // nghỉ sau khi thêm 1 ký tự, tránh gõ lặp liên tục
+const DIST_THRESHOLD = 0.35;   
+const CONFIRM_FRAMES = 36;
+const COOLDOWN_MS = 900;      
 
 function extractFeatures(results) {
     const empty = new Array(63).fill(0);
@@ -63,15 +65,14 @@ export default function SignPredictor() {
     const [distance, setDistance] = useState(null);
     const [text, setText] = useState('');
     const [pendingLabel, setPendingLabel] = useState(null);
-    const [pendingProgress, setPendingProgress] = useState(0); // 0 -> 1
+    const [pendingProgress, setPendingProgress] = useState(0); 
 
     useEffect(() => {
-    fetchTrainingSamples()
-        .then(data => setDataset(data))
-        .catch(err => setLoadError(err.message));
+        fetchTrainingSamples()
+            .then(data => setDataset(data))
+            .catch(err => setLoadError(err.message));
     }, []);
 
-    
     const datasetRef = useRef(null);
     useEffect(() => { datasetRef.current = dataset; }, [dataset]);
 
@@ -85,20 +86,18 @@ export default function SignPredictor() {
         } else if (lb === 'delete') {
             setText(prev => prev.slice(0, -1));
         } else if (lb === 'idle') {
-            // idle không làm gì cả
+            // Không thực hiện hành động
         } else {
             setText(prev => prev + lb);
         }
     }
 
-    // Xoá nhanh bằng bàn phím, không cần ra hình tay "delete"
     useEffect(() => {
         function handleKeyDown(e) {
             if (e.key === 'Backspace') {
                 e.preventDefault();
                 setText(prev => prev.slice(0, -1));
             } else if (e.key === 'Escape') {
-                // Huỷ ký tự đang chờ xác nhận ngay lập tức (hạ tay xuống cũng được, đây là cách nhanh hơn)
                 stableLabelRef.current = null;
                 stableCountRef.current = 0;
                 setPendingLabel(null);
@@ -125,9 +124,9 @@ export default function SignPredictor() {
         if (results.multiHandLandmarks?.length > 0) {
             results.multiHandLandmarks.forEach((lm, i) => {
                 const flipped = lm.map(p => ({ ...p, x: 1 - p.x }));
-                const color = results.multiHandedness[i].label === 'Left' ? '#fbbf24' : '#38bdf8';
-                window.drawConnectors(ctx, flipped, window.HAND_CONNECTIONS, { color, lineWidth: 3 });
-                window.drawLandmarks(ctx, flipped, { color: '#fff', radius: 3 });
+                const color = results.multiHandedness[i].label === 'Left' ? '#F5E6C8' : '#60a5fa';
+                window.drawConnectors(ctx, flipped, window.HAND_CONNECTIONS, { color, lineWidth: 4 });
+                window.drawLandmarks(ctx, flipped, { color: '#ffffff', radius: 4 });
             });
         }
         const ds = datasetRef.current;
@@ -178,7 +177,7 @@ export default function SignPredictor() {
     function speakText() {
         if (!text.trim()) return;
         const utter = new SpeechSynthesisUtterance(text);
-        utter.lang = 'vi-VN'; // đổi thành 'en-US' nếu ghép tên tiếng Anh
+        utter.lang = 'vi-VN'; 
         utter.rate = 0.9;
         window.speechSynthesis.cancel();
         window.speechSynthesis.speak(utter);
@@ -191,8 +190,10 @@ export default function SignPredictor() {
     if (loadError) {
         return (
             <div className="predictor-page">
-                <div className="error-box-full">
-                    Không tải được dataset: {loadError}
+                <div className="error-container">
+                    <AlertTriangle size={48} className="error-icon" />
+                    <h2>Lỗi kết nối hệ thống</h2>
+                    <p>Không thể tải bộ dữ liệu cấu hình ký hiệu: {loadError}</p>
                 </div>
             </div>
         );
@@ -202,34 +203,46 @@ export default function SignPredictor() {
         <div className="predictor-page">
             <div className="predictor-layout">
 
-                {/* LEFT: Camera */}
-                <div className="camera-panel">
+                {/* CỘT TRÁI: Khu vực Camera live stream dữ liệu */}
+                <div className={`camera-panel ${prediction ? 'has-prediction' : ''}`}>
                     <video ref={videoRef} style={{ display: 'none' }} autoPlay playsInline />
                     <canvas ref={canvasRef} width={1280} height={720} className="predictor-canvas" />
 
                     {!dataset && (
                         <div className="loading-overlay">
-                            Đang tải dataset...
+                            <RefreshCw size={32} className="spin-icon" />
+                            <span>ĐỒNG BỘ DỮ LIỆU KNN DATASET...</span>
                         </div>
                     )}
 
-                    <div className="rec-dot">LIVE</div>
+                    <div className="rec-dot-badge">
+                        <span className="dot"></span>
+                        <span className="text"> LIVE </span>
+                    </div>
                 </div>
 
-                {/* RIGHT: Sidebar */}
+                {/* CỘT PHẢI: Bảng điều khiển & phân tích chỉ số */}
                 <div className="side-panel">
 
+                    {/* Khung chữ cái đang nhận diện */}
                     <div className="panel-card prediction-card">
-                        <div className="panel-label">Nhận diện</div>
-                        <div className="prediction-letter">{prediction ?? '—'}</div>
+                        <div className="card-header">
+                            <Cpu size={16} />
+                            <span>KẾT QUẢ NHẬN DIỆN</span>
+                        </div>
+                        <div className={`prediction-letter ${prediction ? 'active-text' : ''}`}>
+                            {prediction ?? '—'}
+                        </div>
                         <div className="prediction-distance">
-                            distance: {distance !== null && distance !== Infinity ? distance.toFixed(3) : '-'}
+                            <Layers size={14} />
+                            <span>Khoảng cách vector: {distance !== null && distance !== Infinity ? distance.toFixed(4) : 'N/A'}</span>
                         </div>
 
                         {pendingLabel && (
                             <div className="pending-box">
-                                <div className="pending-label">
-                                    sắp thêm "{pendingLabel}"...
+                                <div className="pending-text">
+                                    <Sparkles size={12} className="sparkle" />
+                                    Đang khóa ký tự <strong>"{pendingLabel}"</strong>
                                 </div>
                                 <div className="pending-bar-track">
                                     <div
@@ -241,18 +254,36 @@ export default function SignPredictor() {
                         )}
                     </div>
 
+                    {/* Khung biên dịch chuỗi văn bản kết quả */}
                     <div className="panel-card text-card">
-                        <div className="panel-label">Kết quả</div>
-                        <div className="text-output">
-                            {text || <span className="text-placeholder">...</span>}
+                        <div className="card-header">
+                            <Keyboard size={16} />
+                            <span>VĂN BẢN ĐÃ DỊCH CHỮ</span>
                         </div>
+                        <div className="text-output-area">
+                            {text || <span className="text-placeholder">Hệ thống đang chờ ký hiệu từ tay bạn...</span>}
+                        </div>
+                        
                         <div className="text-actions">
-                            <button onClick={speakText}>🔊 Đọc tên</button>
-                            <button onClick={clearText}>🗑 Xoá</button>
+                            <button onClick={speakText} className="btn-action btn-speak" disabled={!text.trim()}>
+                                <Volume2 size={16} />
+                                Đọc phát âm
+                            </button>
+                            <button onClick={clearText} className="btn-action btn-clear" disabled={!text}>
+                                <Trash2 size={16} />
+                                Xóa toàn bộ
+                            </button>
                         </div>
-                        <div className="hint-text">
-                            Giữ yên hình tay ~0.8s để thêm 1 chữ • <b>Backspace</b> để xoá nhanh • <b>Esc</b> để huỷ chữ đang chờ
-                        </div>
+                    </div>
+
+                    {/* Card phím tắt hướng dẫn thông minh */}
+                    <div className="panel-card hint-card">
+                        <div className="hint-title">💡 HƯỚNG DẪN ĐIỀU KHIỂN NHANH</div>
+                        <ul className="hint-list">
+                            <li>Giữ yên tư thế bàn tay trong <b>0.8 giây</b> để máy gõ chữ tự động.</li>
+                            <li>Ấn nút <b>Backspace</b> trên bàn phím máy tính để xóa nhanh 1 chữ cái.</li>
+                            <li>Ấn nút <b>Esc</b> để hủy bỏ tiến trình nạp chữ hiện tại lập tức.</li>
+                        </ul>
                     </div>
 
                 </div>

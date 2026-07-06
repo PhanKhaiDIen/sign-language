@@ -1,44 +1,182 @@
-.footer {
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 28px 24px;
-  margin-top: 40px;
-  font-family: 'Segoe UI', sans-serif;
+/* Bao bọc toàn bộ Footer */
+/* Bao bọc toàn bộ Footer có hình nền */
+#footer-wrapper {
+  position: relative;
+  /* Lớp phủ màu tối (rgba) kết hợp với ảnh nền để chữ không bị mờ/khó đọc */
+  background-image: linear-gradient(rgba(17, 24, 39, 0.92), rgba(17, 24, 39, 0.95)), 
+                    url('../images/footerbg.png'); /* Đường dẫn ảnh nền */
+  
+  /* Cấu hình hiển thị ảnh nền tràn đều */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: scroll; /* Thay bằng 'fixed' nếu muốn hiệu ứng cuộn parallax */
+  
+  color: #f3f4f6; /* Màu chữ sáng */
+  padding: 60px 0 40px;
+  font-family: 'Inter', Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  border-top: 1px solid rgba(255, 255, 255, 0.05); /* Đường viền mờ phía trên */
 }
 
-.footer-inner {
-  max-width: 1280px;
+.container {
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Bố cục chia cột bằng Flexbox */
+.footer-row {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 40px;
 }
 
-.footer-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #cbd5e1;
+/* Các cột */
+.footer-col-main {
+  flex: 0 0 100%;
+}
+
+.footer-col-menu,
+.footer-col-contact {
+  flex: 0 0 100%;
+}
+
+/* Kiểu chữ và khoảng cách chung */
+.project-name {
+  font-size: 24px;
+  font-weight: bold;
+  color: #60a5fa; /* Điểm nhấn màu xanh lam */
+  margin-bottom: 15px;
+  margin-top: 0;
+}
+
+.info, .menu-item, .hotline-email, .connect-vf {
+  margin-bottom: 25px;
+}
+
+.info p, .info div {
+  margin-bottom: 8px;
+  color: #d1d5db;
+}
+
+.menu-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: #9ca3af;
+  margin-bottom: 15px;
+  display: inline-block;
+  letter-spacing: 1px;
+}
+
+.hotline-title, .connect-title {
+  font-weight: 700;
   font-size: 13px;
+  color: #9ca3af;
+  margin-bottom: 15px;
+  letter-spacing: 1px;
 }
 
-.footer-links {
-  display: flex;
-  gap: 18px;
-  flex-wrap: wrap;
+.mt-4 {
+  margin-top: 30px;
+}
+.mt-3 {
+  margin-top: 20px;
 }
 
-.footer-link {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #e2e8f0;
-  font-size: 13px;
+/* Menu Links */
+.menu {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.menu-item {
+  margin-bottom: 12px;
+}
+
+.menu a {
   text-decoration: none;
-  transition: color 0.2s;
+  color: #d1d5db;
+  transition: color 0.3s ease, padding-left 0.3s ease;
 }
 
-.footer-link:hover {
-  color: #F5E6C8;
+.menu a:hover {
+  color: #60a5fa;
+  padding-left: 5px; /* Hiệu ứng đẩy text nhẹ khi hover */
+}
+
+/* Contact Links */
+.hotline a, .email a {
+  text-decoration: none;
+  color: #f3f4f6;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 15px;
+  transition: color 0.3s ease;
+}
+
+.hotline a:hover, .email a:hover {
+  color: #60a5fa;
+}
+
+/* Mạng xã hội */
+.social {
+  display: flex;
+  gap: 12px;
+}
+
+.social-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  background-color: #374151;
+  border-radius: 50%;
+  text-decoration: none;
+  color: #f3f4f6;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.social-item:hover {
+  background-color: #60a5fa;
+  color: #ffffff;
+  transform: translateY(-3px); /* Hiệu ứng nảy nhẹ khi hover */
+}
+
+.copy-right span {
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+/* --- XỬ LÝ RESPONSIVE (Desktop & Mobile) --- */
+
+.desktop-only {
+  display: none;
+}
+.mobile-only {
+  display: block;
+}
+
+/* Khi lên màn hình lớn (Desktop - từ 992px trở lên) */
+@media (min-width: 992px) {
+  .footer-col-main {
+    flex: 0 0 calc(50% - 40px); /* Cột 1 chiếm 50% */
+  }
+  
+  .footer-col-menu,
+  .footer-col-contact {
+    flex: 0 0 calc(25% - 20px); /* Cột 2 và 3 chiếm 25% */
+  }
+
+  .desktop-only {
+    display: block;
+    margin-top: 40px;
+  }
+  .mobile-only {
+    display: none;
+  }
 }

@@ -1,0 +1,221 @@
+/* Container chính */
+.home-container {
+  min-height: calc(100vh - 100px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 24px;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  background-color: #0b0f19; /* Nền tối sâu nguyên bản của các app AI */
+  position: relative;
+  overflow: hidden;
+}
+
+/* Hiệu ứng đèn Neon mờ phía sau làm nền */
+.ambient-glow {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(245, 230, 200, 0.08) 0%, rgba(96, 165, 250, 0.03) 50%, transparent 100%);
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Badge AI lung linh */
+.hero-badge {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: rgba(245, 230, 200, 0.06);
+  border: 1px solid rgba(245, 230, 200, 0.2);
+  color: #F5E6C8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  margin-bottom: 28px;
+  box-shadow: 0 4px 20px rgba(245, 230, 200, 0.03);
+}
+
+.sparkle-icon {
+  color: #F5E6C8;
+  animation: pulse 2s infinite ease-in-out;
+}
+
+/* Tiêu đề lớn */
+.hero-title {
+  position: relative;
+  z-index: 1;
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.15;
+  margin-bottom: 20px;
+  max-width: 800px;
+  letter-spacing: -1px;
+}
+
+.highlight-text {
+  color: #F5E6C8;
+  background: linear-gradient(120deg, #F5E6C8 0%, #ffedd5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Phụ đề mềm mại */
+.hero-subtitle {
+  position: relative;
+  z-index: 1;
+  color: #94a3b8;
+  font-size: 17px;
+  line-height: 1.7;
+  max-width: 600px;
+  margin-bottom: 40px;
+}
+
+/* Nhóm các nút điều hướng */
+.cta-group {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 16px;
+  margin-bottom: 70px;
+}
+
+/* Nút chính (Vàng cát/Gold nhẹ) */
+.btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 36px;
+  border-radius: 999px;
+  background: #F5E6C8;
+  color: #0b0f19;
+  font-weight: 700;
+  font-size: 15px;
+  text-decoration: none;
+  box-shadow: 0 10px 25px -5px rgba(245, 230, 200, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 30px -5px rgba(245, 230, 200, 0.5);
+  background: #fff;
+}
+
+/* Nút phụ (Viền mờ) */
+.btn-secondary {
+  padding: 14px 36px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.03);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 15px;
+  text-decoration: none;
+  backdrop-filter: blur(4px);
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Grid chứa danh sách tính năng */
+.features-grid {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 1000px;
+}
+
+/* Thẻ tính năng phong cách Kính mờ (Glassmorphism) */
+.feature-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  padding: 32px 28px;
+  width: 260px;
+  text-align: left; /* Đổi sang canh trái nhìn sang trọng và dễ đọc hơn */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.feature-card:hover {
+  transform: translateY(-8px);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(245, 230, 200, 0.3);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+}
+
+/* Vùng chứa Icon của Thẻ */
+.feature-icon-wrapper {
+  color: #F5E6C8;
+  background: rgba(245, 230, 200, 0.08);
+  width: 54px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover .feature-icon-wrapper {
+  background: #F5E6C8;
+  color: #0b0f19;
+}
+
+.feature-card-title {
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  margin-top: 0;
+}
+
+.feature-card-desc {
+  color: #94a3b8;
+  font-size: 13.5px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* --- RESPONSIVE TỰ ĐỘNG --- */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2.5rem;
+  }
+  .cta-group {
+    flex-direction: column;
+    width: 100%;
+    max-width: 300px;
+  }
+  .btn-primary, .btn-secondary {
+    justify-content: center;
+  }
+  .feature-card {
+    width: 100%; /* Trên điện thoại các card sẽ xếp dọc gọn gàng */
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
