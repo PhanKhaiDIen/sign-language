@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import HomePage from './pages/HomePage';
 import SignPredictor from './components/SignPredictor';
 import SignCanvas from './components/SignCanvas';
+import PracticePage from './pages/PracticePage';
 import GuidePage from './pages/GuidePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -23,6 +24,9 @@ export default function App() {
 
             <Route path="/predictor" element={
               <ProtectedRoute><SignPredictor /></ProtectedRoute>
+            } />
+            <Route path="/practice" element={
+              <ProtectedRoute><PracticePage /></ProtectedRoute>
             } />
             <Route path="/canvas" element={
               <ProtectedRoute><SignCanvas /></ProtectedRoute>

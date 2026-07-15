@@ -94,9 +94,22 @@ export default function SignPredictor() {
 
     useEffect(() => {
         function handleKeyDown(e) {
+            const target = e.target;
+            const isTypingTarget =
+                target instanceof HTMLElement &&
+                (target.tagName === 'INPUT' ||
+                    target.tagName === 'TEXTAREA' ||
+                    target.tagName === 'SELECT' ||
+                    target.isContentEditable);
+
+            if (isTypingTarget) return;
+
             if (e.key === 'Backspace') {
                 e.preventDefault();
                 setText(prev => prev.slice(0, -1));
+            } else if (e.key === ' ' || e.code === 'Space' || e.key === 'Spacebar') {
+                e.preventDefault();
+                setText(prev => prev + ' ');
             } else if (e.key === 'Escape') {
                 stableLabelRef.current = null;
                 stableCountRef.current = 0;
@@ -104,8 +117,8 @@ export default function SignPredictor() {
                 setPendingProgress(0);
             }
         }
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
+        window.addEventListener('keydown', handleKeyDown, true);
+        return () => window.removeEventListener('keydown', handleKeyDown, true);
     }, []);
 
     const onResults = useCallback((results) => {
