@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { BarChart3, RefreshCw, Target, TrendingUp } from 'lucide-react';
+import { BarChart3, RefreshCw, Target, TrendingUp, Award, CheckCircle2, XCircle, Zap, Activity } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { fetchPracticeStats } from '../services/api';
 import '../assets/styles/ProgressPage.css';
@@ -46,91 +46,162 @@ export default function ProgressPage() {
 
   return (
     <main className="progress-page">
+      {/* HEADER SECTION */}
       <section className="progress-header">
-        <div>
+        <div className="header-title-block">
           <div className="progress-badge">
-            <TrendingUp size={15} />
-            Learning Progress
+            <TrendingUp size={14} />
+            Hành trình học tập
           </div>
-          <h1>Tiến độ luyện tập</h1>
-          <p>Theo dõi độ chính xác, chữ còn yếu và các lượt luyện gần nhất của bạn.</p>
+          <h1>Thống Kê Tiến Độ</h1>
+          <p>Phân tích hiệu suất luyện tập và nhận diện các ký hiệu cần cải thiện.</p>
         </div>
-        <button type="button" onClick={loadStats} disabled={loading}>
+        <button 
+          type="button" 
+          className="btn-refresh glass-panel" 
+          onClick={loadStats} 
+          disabled={loading}
+        >
           <RefreshCw size={16} className={loading ? 'spin' : ''} />
-          Làm mới
+          <span>Làm mới dữ liệu</span>
         </button>
       </section>
 
-      {error && <div className="progress-error">{error}</div>}
+      {error && (
+        <div className="progress-error-banner">
+          <XCircle size={18} />
+          <span>{error}</span>
+        </div>
+      )}
 
+      {/* STATS OVERVIEW GRID */}
       <section className="summary-grid">
-        <div className="summary-card">
-          <span>Lượt luyện</span>
-          <strong>{summary.attempts}</strong>
+        <div className="summary-card glass-panel card-blue">
+          <div className="card-header-icon">
+            <Activity size={20} />
+          </div>
+          <div className="card-info">
+            <span>Tổng lượt luyện</span>
+            <strong>{summary.attempts}</strong>
+          </div>
         </div>
-        <div className="summary-card">
-          <span>Số lần đúng</span>
-          <strong>{summary.correct}</strong>
+
+        <div className="summary-card glass-panel card-green">
+          <div className="card-header-icon">
+            <CheckCircle2 size={20} />
+          </div>
+          <div className="card-info">
+            <span>Ký hiệu đúng</span>
+            <strong>{summary.correct}</strong>
+          </div>
         </div>
-        <div className="summary-card">
-          <span>Độ chính xác</span>
-          <strong>{summary.accuracy}%</strong>
+
+        <div className="summary-card glass-panel card-purple">
+          <div className="card-header-icon">
+            <Award size={20} />
+          </div>
+          <div className="card-info">
+            <span>Độ chính xác trung bình</span>
+            <strong>{summary.accuracy}%</strong>
+          </div>
         </div>
-        <div className="summary-card">
-          <span>Khoảng cách TB</span>
-          <strong>{summary.avgDistance ?? 'N/A'}</strong>
+
+        <div className="summary-card glass-panel card-orange">
+          <div className="card-header-icon">
+            <Zap size={20} />
+          </div>
+          <div className="card-info">
+            <span>Sai số khớp trung bình (Distance)</span>
+            <strong>
+              {summary.avgDistance !== null && summary.avgDistance !== undefined
+                ? Number(summary.avgDistance).toFixed(4)
+                : 'N/A'}
+            </strong>
+          </div>
         </div>
       </section>
 
+      {/* DETAILS SECTION */}
       <section className="progress-layout">
-        <div className="progress-panel">
+        
+        {/* WEAKEST LETTERS LIST */}
+        <div className="progress-panel glass-panel">
           <div className="panel-title">
-            <Target size={18} />
-            <h2>Chữ cần luyện thêm</h2>
+            <Target size={18} className="icon-target" />
+            <h2>Cần Luyện Tập Thêm</h2>
           </div>
+          <p className="panel-subtitle">Các ký hiệu có tỉ lệ chính xác chưa cao của bạn.</p>
 
           {weakestLabels.length === 0 ? (
-            <p className="empty-text">Chưa có dữ liệu luyện tập. Hãy vào Practice và hoàn thành vài lượt trước.</p>
+            <div className="empty-state">
+              <p>Chưa có dữ liệu phân tích. Hãy vào phòng luyện tập và thử vài lượt trước nhé!</p>
+            </div>
           ) : (
             <div className="label-list">
               {weakestLabels.map(item => (
                 <div className="label-row" key={item.targetLabel}>
-                  <div className="label-main">
-                    <strong>{item.targetLabel}</strong>
-                    <span>{item.correct}/{item.attempts} đúng</span>
+                  <div className="label-meta">
+                    <div className="char-badge">{item.targetLabel}</div>
+                    <div className="label-attempts">
+                      <strong>{item.correct}</strong>/{item.attempts} lần đúng
+                    </div>
                   </div>
-                  <div className="label-meter">
-                    <div style={{ width: `${item.accuracy}%` }} />
+                  
+                  <div className="label-meter-wrapper">
+                    <div className="label-meter">
+                      <div 
+                        className="label-meter-fill" 
+                        style={{ 
+                          width: `${item.accuracy}%`,
+                          background: item.accuracy < 50 
+                            ? 'linear-gradient(90deg, #ef4444, #f97316)' 
+                            : 'linear-gradient(90deg, #f59e0b, #10b981)'
+                        }} 
+                      />
+                    </div>
+                    <span className="label-accuracy-text">{item.accuracy}%</span>
                   </div>
-                  <span className="label-accuracy">{item.accuracy}%</span>
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        <div className="progress-panel">
+        {/* RECENT SESSIONS */}
+        <div className="progress-panel glass-panel">
           <div className="panel-title">
-            <BarChart3 size={18} />
-            <h2>Lượt luyện gần nhất</h2>
+            <BarChart3 size={18} className="icon-chart" />
+            <h2>Nhật Ký Gần Đây</h2>
           </div>
+          <p className="panel-subtitle">Lịch sử đánh giá thời gian thực từ camera.</p>
 
           {(stats?.recent || []).length === 0 ? (
-            <p className="empty-text">Chưa có lượt luyện nào được lưu.</p>
+            <div className="empty-state">
+              <p>Chưa ghi nhận lượt thực hiện nào gần đây.</p>
+            </div>
           ) : (
             <div className="recent-list">
               {stats.recent.map((item, index) => (
                 <div className={`recent-row ${item.isCorrect ? 'correct' : 'wrong'}`} key={`${item.createdAt}-${index}`}>
-                  <div>
-                    <strong>{item.targetLabel}</strong>
-                    <span>Dự đoán: {item.predictedLabel}</span>
+                  <div className="recent-info">
+                    <div className="recent-char-box">{item.targetLabel}</div>
+                    <div className="recent-details">
+                      <span className="recent-predict">Nhận diện: <strong>{item.predictedLabel || 'N/A'}</strong></span>
+                      <span className="recent-time">
+                        {item.createdAt ? new Date(item.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : 'Vừa xong'}
+                      </span>
+                    </div>
                   </div>
-                  <small>{item.isCorrect ? 'Đúng' : 'Sai'}</small>
+                  
+                  <span className={`status-badge ${item.isCorrect ? 'correct' : 'wrong'}`}>
+                    {item.isCorrect ? 'Chính xác' : 'Chưa đúng'}
+                  </span>
                 </div>
               ))}
             </div>
           )}
         </div>
+
       </section>
     </main>
   );

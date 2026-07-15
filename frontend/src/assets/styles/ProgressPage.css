@@ -1,249 +1,448 @@
+:root {
+  --bg-dark: #09090b;
+  --bg-panel: rgba(24, 24, 27, 0.45);
+  --border-color: rgba(255, 255, 255, 0.06);
+  --text-main: #f8fafc;
+  --text-muted: #71717a;
+  
+  --accent-blue: #3b82f6;
+  --accent-purple: #8b5cf6;
+  --success: #10b981;
+  --error: #ef4444;
+  --warning: #f59e0b;
+  --orange: #f97316;
+}
+
 .progress-page {
-  min-height: calc(100vh - 100px);
-  padding: 40px 24px 72px;
-  background: #0b0f19;
-  color: #f8fafc;
-  font-family: 'Inter', 'Segoe UI', sans-serif;
+  min-height: calc(100vh - 80px);
+  padding: 40px 24px;
+  background: radial-gradient(circle at top center, #1c1917 0%, var(--bg-dark) 100%);
+  color: var(--text-main);
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
-.progress-header,
-.summary-grid,
-.progress-layout {
-  width: min(1120px, 100%);
-  margin: 0 auto;
-}
-
+/* ================= HEADER SECTION ================= */
 .progress-header {
   display: flex;
-  align-items: flex-end;
   justify-content: space-between;
-  gap: 18px;
-  margin-bottom: 24px;
+  align-items: flex-end;
+  max-width: 1200px;
+  margin: 0 auto 32px auto;
+  gap: 20px;
+}
+
+.header-title-block h1 {
+  font-size: 32px;
+  font-weight: 850;
+  margin: 10px 0 6px 0;
+  letter-spacing: -0.5px;
+  background: linear-gradient(to right, #ffffff, #a1a1aa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.header-title-block p {
+  color: var(--text-muted);
+  margin: 0;
+  font-size: 15px;
 }
 
 .progress-badge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 7px 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(245, 230, 200, 0.22);
-  background: rgba(245, 230, 200, 0.07);
-  color: #f5e6c8;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 99px;
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  color: #a78bfa;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 16px;
+  letter-spacing: 0.5px;
 }
 
-.progress-header h1 {
-  margin: 0 0 8px;
-  color: #ffffff;
-  font-size: 34px;
-  line-height: 1.1;
-}
-
-.progress-header p {
-  margin: 0;
-  color: #94a3b8;
-  font-size: 15px;
-}
-
-.progress-header button {
-  display: inline-flex;
+.btn-refresh {
+  display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 42px;
-  padding: 0 16px;
-  border: 1px solid rgba(245, 230, 200, 0.18);
-  border-radius: 10px;
-  background: rgba(245, 230, 200, 0.08);
-  color: #f8fafc;
-  font-weight: 800;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
   cursor: pointer;
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  transition: all 0.2s ease;
 }
 
+.btn-refresh:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.btn-refresh:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ================= GLASS PANEL ================= */
+.glass-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* ================= OVERVIEW STATS GRID ================= */
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-  margin-bottom: 22px;
-}
-
-.summary-card,
-.progress-panel {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.035);
+  gap: 16px;
+  max-width: 1200px;
+  margin: 0 auto 32px auto;
 }
 
 .summary-card {
-  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
 }
 
-.summary-card span {
-  display: block;
-  margin-bottom: 10px;
-  color: #94a3b8;
+.summary-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+}
+
+.card-header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+}
+
+.card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-info span {
   font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
 }
 
-.summary-card strong {
-  color: #ffffff;
-  font-size: 30px;
-  line-height: 1;
+.card-info strong {
+  font-size: 26px;
+  font-weight: 850;
+  color: #fff;
+  line-height: 1.1;
 }
 
+/* Biến thể màu cho từng Card chỉ số */
+.card-blue::before { background: var(--accent-blue); }
+.card-blue .card-header-icon { color: var(--accent-blue); background: rgba(59, 130, 246, 0.08); }
+
+.card-green::before { background: var(--success); }
+.card-green .card-header-icon { color: var(--success); background: rgba(16, 185, 129, 0.08); }
+
+.card-purple::before { background: var(--accent-purple); }
+.card-purple .card-header-icon { color: var(--accent-purple); background: rgba(139, 92, 246, 0.08); }
+
+.card-orange::before { background: var(--orange); }
+.card-orange .card-header-icon { color: var(--orange); background: rgba(249, 115, 22, 0.08); }
+
+/* ================= PANELS LAYOUT ================= */
 .progress-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(340px, 0.85fr);
-  gap: 22px;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .progress-panel {
-  padding: 22px;
+  padding: 28px;
 }
 
 .panel-title {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 18px;
-  color: #f5e6c8;
+  margin-bottom: 6px;
 }
 
 .panel-title h2 {
-  margin: 0;
-  color: #ffffff;
   font-size: 18px;
+  font-weight: 750;
+  margin: 0;
+  color: #fff;
 }
 
-.label-list,
-.recent-list {
-  display: grid;
-  gap: 12px;
+.panel-title .icon-target { color: var(--accent-blue); }
+.panel-title .icon-chart { color: var(--accent-purple); }
+
+.panel-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0 0 24px 0;
 }
 
-.label-row,
-.recent-row {
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.18);
+/* ================= STYLE: WEAKEST LETTERS LIST ================= */
+.label-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .label-row {
-  display: grid;
-  grid-template-columns: 110px minmax(0, 1fr) 54px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.label-row:last-child {
+  border: none;
+  padding-bottom: 0;
+}
+
+.label-meta {
+  display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px;
+  justify-content: space-between;
 }
 
-.label-main strong {
-  display: block;
-  color: #ffffff;
-  font-size: 24px;
-  line-height: 1;
+.char-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
 }
 
-.label-main span,
-.recent-row span,
-.empty-text {
-  color: #94a3b8;
+.label-attempts {
   font-size: 13px;
+  color: var(--text-muted);
+}
+
+.label-attempts strong {
+  color: var(--text-main);
+}
+
+.label-meter-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .label-meter {
-  overflow: hidden;
+  flex: 1;
   height: 8px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 99px;
+  overflow: hidden;
 }
 
-.label-meter div {
+.label-meter-fill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #ef4444, #f59e0b, #22c55e);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.label-accuracy {
-  color: #f8fafc;
+.label-accuracy-text {
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
+  color: var(--text-main);
+  min-width: 38px;
   text-align: right;
+}
+
+/* ================= STYLE: RECENT ACTIVITY TIMELINE ================= */
+.recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .recent-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 14px;
-  border: 1px solid transparent;
-}
-
-.recent-row.correct {
-  border-color: rgba(34, 197, 94, 0.18);
-}
-
-.recent-row.wrong {
-  border-color: rgba(239, 68, 68, 0.2);
-}
-
-.recent-row strong {
-  display: block;
-  color: #ffffff;
-  font-size: 20px;
-}
-
-.recent-row small {
-  color: #f8fafc;
-  font-weight: 800;
-}
-
-.progress-error {
-  width: min(1120px, 100%);
-  margin: 0 auto 18px;
   padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  transition: transform 0.15s ease;
+}
+
+.recent-row:hover {
+  transform: translateX(2px);
+}
+
+.recent-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.recent-char-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
   border-radius: 10px;
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  background: rgba(239, 68, 68, 0.08);
-  color: #fecaca;
+  font-size: 20px;
+  font-weight: 900;
+  color: #fff;
 }
 
-.spin {
-  animation: progress-spin 1s linear infinite;
+/* Nền của ký tự dựa trên kết quả */
+.recent-row.correct .recent-char-box {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
-@media (max-width: 900px) {
-  .progress-header,
-  .progress-layout {
-    grid-template-columns: 1fr;
-  }
+.recent-row.wrong .recent-char-box {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
 
-  .progress-header {
-    align-items: flex-start;
-    flex-direction: column;
-  }
+.recent-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
 
+.recent-predict {
+  font-size: 14px;
+  color: var(--text-main);
+}
+
+.recent-predict strong {
+  color: #fff;
+}
+
+.recent-time {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Tag Trạng Thái */
+.status-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.correct {
+  color: #a7f3d0;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.1);
+}
+
+.status-badge.wrong {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.1);
+}
+
+/* ================= EMPTY & ERROR STATES ================= */
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px dashed var(--border-color);
+  border-radius: 12px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.progress-error-banner {
+  max-width: 1200px;
+  margin: 0 auto 24px auto;
+  padding: 12px 20px;
+  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+/* ================= RESPONSIVE DESIGN ================= */
+@media (max-width: 1024px) {
   .summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  
+  .progress-layout {
+    grid-template-columns: 1fr;
+  }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 640px) {
   .progress-page {
-    padding: 28px 16px 56px;
+    padding: 24px 16px;
   }
 
-  .summary-grid,
-  .label-row {
+  .progress-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .btn-refresh {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .summary-grid {
     grid-template-columns: 1fr;
   }
 
-  .label-accuracy {
-    text-align: left;
+  .summary-card {
+    padding: 16px;
   }
+}
+
+/* Animation quay của Icon Loading */
+.spin {
+  animation: progress-spin 1s linear infinite;
 }
 
 @keyframes progress-spin {
