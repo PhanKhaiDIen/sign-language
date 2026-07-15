@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { CheckCircle2, Layers, RefreshCw, RotateCcw, Shuffle, SkipForward, Target, XCircle } from 'lucide-react';
+import { CheckCircle2, Layers, RefreshCw, RotateCcw, Shuffle, SkipForward, Target, XCircle, Activity } from 'lucide-react';
 import { useHandTracking } from '../hooks/useHandTracking';
-import { fetchTrainingSamples } from '../services/api';
+import { fetchTrainingSamples, savePracticeResult } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import '../assets/styles/PracticePage.css';
 
 const K = 4;
@@ -11,6 +12,7 @@ const NEXT_DELAY_MS = 700;
 const DEFAULT_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 const CONTROL_LABELS = new Set(['space', 'delete', 'idle']);
 
+// ... (Giữ nguyên các hàm extractFeatures, euclidean, knnPredict, getRandomLetter như cũ của bạn)
 function extractFeatures(results) {
   const empty = new Array(63).fill(0);
   let leftFeat = empty;
@@ -74,6 +76,7 @@ function getRandomLetter(letters, currentLetter) {
 }
 
 export default function PracticePage() {
+  const { token } = useAuth();
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const datasetRef = useRef(null);
@@ -89,6 +92,7 @@ export default function PracticePage() {
   const [distance, setDistance] = useState(null);
   const [progress, setProgress] = useState(0);
   const [feedback, setFeedback] = useState('ready');
+  const [saveStatus, setSaveStatus] = useState('');
   const [stats, setStats] = useState({ correct: 0, attempts: 0, streak: 0 });
 
   useEffect(() => {
@@ -137,12 +141,23 @@ export default function PracticePage() {
     lockedRef.current = true;
 
     const isCorrect = label === targetRef.current;
+    const targetLabel = targetRef.current;
     setStats(prev => ({
       correct: prev.correct + (isCorrect ? 1 : 0),
       attempts: prev.attempts + 1,
       streak: isCorrect ? prev.streak + 1 : 0,
     }));
     setFeedback(isCorrect ? 'correct' : 'wrong');
+    setSaveStatus('Đang lưu kết quả...');
+
+    savePracticeResult({
+      targetLabel,
+      predictedLabel: label,
+      isCorrect,
+      distance,
+    }, token)
+      .then(() => setSaveStatus('Đã lưu vào tiến độ'))
+      .catch(err => setSaveStatus(`Chưa lưu được: ${err.message}`));
 
     window.setTimeout(() => {
       if (isCorrect) {
@@ -151,7 +166,7 @@ export default function PracticePage() {
         resetLockState();
       }
     }, NEXT_DELAY_MS);
-  }, [nextTarget, resetLockState]);
+  }, [distance, nextTarget, resetLockState, token]);
 
   const onResults = useCallback((results) => {
     const canvas = canvasRef.current;
@@ -171,9 +186,9 @@ export default function PracticePage() {
     if (results.multiHandLandmarks?.length > 0) {
       results.multiHandLandmarks.forEach((lm, i) => {
         const flipped = lm.map(p => ({ ...p, x: 1 - p.x }));
-        const color = results.multiHandedness[i].label === 'Left' ? '#f5e6c8' : '#60a5fa';
-        window.drawConnectors(ctx, flipped, window.HAND_CONNECTIONS, { color, lineWidth: 4 });
-        window.drawLandmarks(ctx, flipped, { color: '#ffffff', radius: 4 });
+        const color = results.multiHandedness[i].label === 'Left' ? '#a78bfa' : '#38bdf8';
+        window.drawConnectors(ctx, flipped, window.HAND_CONNECTIONS, { color, lineWidth: 3 });
+        window.drawLandmarks(ctx, flipped, { color: '#ffffff', radius: 3 });
       });
     }
 
@@ -215,9 +230,9 @@ export default function PracticePage() {
   if (loadError) {
     return (
       <main className="practice-page">
-        <div className="practice-error">
-          <XCircle size={42} />
-          <h1>Không tải được dữ liệu luyện tập</h1>
+        <div className="practice-error glass-panel">
+          <XCircle size={48} className="error-icon" />
+          <h1>Lỗi Dữ Liệu</h1>
           <p>{loadError}</p>
         </div>
       </main>
@@ -226,98 +241,104 @@ export default function PracticePage() {
 
   return (
     <main className="practice-page">
+      <div className="page-header">
+        <h1>Luyện Tập Ký Hiệu</h1>
+        <p>Thực hiện cử chỉ tay tương ứng với chữ cái được yêu cầu.</p>
+      </div>
+
       <section className="practice-layout">
-        <div className={`practice-camera ${feedback}`}>
-          <video ref={videoRef} style={{ display: 'none' }} autoPlay playsInline />
-          <canvas ref={canvasRef} width={1280} height={720} className="practice-canvas" />
+        {/* LEFT COLUMN: CAMERA */}
+        <div className={`practice-camera-container ${feedback}`}>
+          <div className="camera-wrapper">
+            <video ref={videoRef} style={{ display: 'none' }} autoPlay playsInline />
+            <canvas ref={canvasRef} width={1280} height={720} className="practice-canvas" />
 
-          {!dataset && (
-            <div className="practice-loading">
-              <RefreshCw size={30} className="practice-spin" />
-              <span>Đang tải dataset luyện tập...</span>
+            {!dataset && (
+              <div className="practice-loading">
+                <RefreshCw size={32} className="practice-spin" />
+                <span>Đang tải mô hình...</span>
+              </div>
+            )}
+
+            <div className="practice-live-badge">
+              <span className="live-dot" /> LIVE
             </div>
-          )}
-
-          <div className="practice-live-badge">
-            <span />
-            LIVE
+            
+            {/* Tích hợp Progress Bar thẳng vào viền dưới camera để trông ngầu hơn */}
+            <div className="camera-progress-track">
+              <div className="camera-progress-fill" style={{ width: `${progress * 100}%` }} />
+            </div>
+          </div>
+          
+          <div className="camera-status-bar">
+             {feedback === 'correct' && <><CheckCircle2 size={18} /> Chính xác! Chuẩn bị chữ tiếp theo...</>}
+             {feedback === 'wrong' && <><XCircle size={18} /> Sai rồi. Vui lòng thử lại.</>}
+             {feedback === 'ready' && <><Activity size={18} /> Đang chờ cử chỉ của bạn...</>}
           </div>
         </div>
 
-        <aside className="practice-panel">
-          <div className="practice-card target-card">
-            <div className="practice-card-header">
-              <Target size={16} />
-              <span>Chữ cần luyện</span>
+        {/* RIGHT COLUMN: PANEL */}
+        <aside className="practice-sidebar">
+          
+          {/* Target & Prediction Card */}
+          <div className="glass-panel target-prediction-card">
+            <div className="card-section">
+              <div className="section-label"><Target size={16}/> Mục tiêu</div>
+              <div className="target-letter-display">{target}</div>
             </div>
-            <div className="target-letter">{target}</div>
-            <p className="target-help">Hãy làm ký hiệu này và giữ tay ổn định đến khi thanh xác nhận đầy.</p>
-          </div>
-
-          <div className={`practice-card feedback-card ${feedback}`}>
-            <div className="practice-card-header">
-              <Layers size={16} />
-              <span>Kết quả hiện tại</span>
-            </div>
-            <div className="prediction-row">
-              <span className="prediction-label">{prediction || '-'}</span>
-              <span className="distance-label">
-                {distance !== null && distance !== Infinity ? distance.toFixed(4) : 'N/A'}
-              </span>
-            </div>
-            <div className="practice-progress-track">
-              <div className="practice-progress-fill" style={{ width: `${progress * 100}%` }} />
-            </div>
-            <div className="feedback-message">
-              {feedback === 'correct' && (
-                <>
-                  <CheckCircle2 size={18} />
-                  Đúng rồi, chuyển chữ tiếp theo.
-                </>
-              )}
-              {feedback === 'wrong' && (
-                <>
-                  <XCircle size={18} />
-                  Chưa đúng, thử lại chữ {target}.
-                </>
-              )}
-              {feedback === 'ready' && 'Đưa tay vào khung để bắt đầu.'}
+            
+            <div className="divider"></div>
+            
+            <div className="card-section">
+              <div className="section-label"><Layers size={16}/> Cảm biến</div>
+              <div className={`prediction-display ${prediction === target ? 'match' : ''}`}>
+                {prediction || '?'}
+              </div>
+              <div className="distance-badge">
+                Sai số: {distance !== null && distance !== Infinity ? distance.toFixed(3) : '--'}
+              </div>
             </div>
           </div>
 
-          <div className="practice-card stats-card">
-            <div className="stat-item">
-              <span>Đúng</span>
-              <strong>{stats.correct}</strong>
+          {/* Stats Grid */}
+          <div className="glass-panel stats-grid">
+            <div className="stat-box">
+              <span className="stat-label">Chính xác</span>
+              <span className="stat-value correct">{stats.correct}</span>
             </div>
-            <div className="stat-item">
-              <span>Lượt thử</span>
-              <strong>{stats.attempts}</strong>
+            <div className="stat-box">
+              <span className="stat-label">Đã thử</span>
+              <span className="stat-value">{stats.attempts}</span>
             </div>
-            <div className="stat-item">
-              <span>Độ chính xác</span>
-              <strong>{accuracy}%</strong>
+            <div className="stat-box">
+              <span className="stat-label">Tỉ lệ đúng</span>
+              <span className="stat-value">{accuracy}%</span>
             </div>
-            <div className="stat-item">
-              <span>Chuỗi đúng</span>
-              <strong>{stats.streak}</strong>
+            <div className="stat-box">
+              <span className="stat-label">Chuỗi (Streak)</span>
+              <span className="stat-value streak">{stats.streak} 🔥</span>
             </div>
           </div>
 
-          <div className="practice-actions">
-            <button type="button" onClick={nextTarget}>
-              <SkipForward size={16} />
-              Chữ khác
+          {saveStatus && (
+            <div className="practice-save-status">
+              {saveStatus}
+            </div>
+          )}
+
+          {/* Controls */}
+          <div className="glass-panel controls-grid">
+            <button className="btn btn-primary" onClick={nextTarget}>
+              <SkipForward size={18} /> Chuyển chữ
             </button>
-            <button type="button" onClick={resetPractice}>
-              <RotateCcw size={16} />
-              Đặt lại
+            <button className="btn btn-secondary" onClick={() => setTarget(getRandomLetter(practiceLetters, target))}>
+              <Shuffle size={18} /> Đảo ngẫu nhiên
             </button>
-            <button type="button" onClick={() => setTarget(getRandomLetter(practiceLetters, target))}>
-              <Shuffle size={16} />
-              Ngẫu nhiên
+            <button className="btn btn-danger" onClick={resetPractice}>
+              <RotateCcw size={18} /> Làm lại từ đầu
             </button>
           </div>
+
         </aside>
       </section>
     </main>

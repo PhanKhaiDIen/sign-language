@@ -50,3 +50,25 @@ export async function clearTrainingSamples(token) {
   if (!res.ok) throw new Error(data.message || 'Xóa thất bại');
   return data;
 }
+export async function savePracticeResult(result, token) {
+  const res = await fetch(`${API_URL}/practice/results`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(result)
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Lưu kết quả luyện tập thất bại');
+  return data;
+}
+
+export async function fetchPracticeStats(token) {
+  const res = await fetch(`${API_URL}/practice/stats`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Không tải được thống kê luyện tập');
+  return data;
+}
