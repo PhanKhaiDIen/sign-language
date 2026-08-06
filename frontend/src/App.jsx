@@ -11,6 +11,7 @@ import GuidePage from './pages/GuidePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import Footer from './components/Footer';
+import AdminRoute from './components/AdminRoute';
 export default function App() {
   return (
     <AuthProvider>
@@ -33,7 +34,7 @@ export default function App() {
               <ProtectedRoute><ProgressPage /></ProtectedRoute>
             } />
             <Route path="/canvas" element={
-              <ProtectedRoute><SignCanvas /></ProtectedRoute>
+              <AdminRoute><SignCanvas /></AdminRoute>
             } />
           </Routes>
           <div>

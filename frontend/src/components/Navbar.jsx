@@ -15,13 +15,17 @@ export default function Navbar() {
     return location.pathname === path;
   }
 
-  const navLinks = [
+  const baseNavLinks = [
     { path: '/predictor', label: 'Predictor' },
     { path: '/practice', label: 'Practice' },
     { path: '/progress', label: 'Progress' },
     { path: '/guide', label: 'Hướng dẫn' },
-    { path: '/canvas', label: 'Ghi mẫu' },
   ];
+
+  // Chỉ admin mới thấy link "Ghi mẫu" (trang SignCanvas)
+  const navLinks = user?.role === 'admin'
+    ? [...baseNavLinks, { path: '/canvas', label: 'Ghi mẫu' }]
+    : baseNavLinks;
 
   return (
     <header style={{

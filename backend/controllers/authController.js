@@ -37,35 +37,35 @@ const login = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-    return res.status(400).json({ message: 'Vui lòng nhập email và password' });
+        return res.status(400).json({ message: 'Vui lòng nhập email và password' });
     }
 
     try {
-    const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
-    if (users.length === 0) {
-        return res.status(401).json({ message: 'Email hoặc password không đúng' });
-    }
+        const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+        if (users.length === 0) {
+            return res.status(401).json({ message: 'Email hoặc password không đúng' });
+        }
 
-    const user = users[0];
-    const isMatch = await bcrypt.compare(password, user.password_hash);
-    if (!isMatch) {
-        return res.status(401).json({ message: 'Email hoặc password không đúng' });
-    }
+        const user = users[0];
+        const isMatch = await bcrypt.compare(password, user.password_hash);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Email hoặc password không đúng' });
+        }
 
-    // Tạo JWT token
-    const token = jwt.sign(
-        { userId: user.id, username: user.username },
-        process.env.JWT_SECRET,
-        { expiresIn: '7d' }
-    );
+        // Tạo JWT token — thêm role vào payload
+const token = jwt.sign(
+    { userId: user.id, username: user.username, role: user.role },
+    process.env.JWT_SECRET,
+    { expiresIn: '7d' }
+);
 
-    res.json({
-        message: 'Đăng nhập thành công',
-        token,
-        user: { id: user.id, username: user.username, email: user.email }
-    });
+res.json({
+    message: 'Đăng nhập thành công',
+    token,
+    user: { id: user.id, username: user.username, email: user.email, role: user.role }
+});
     } catch (err) {
-    res.status(500).json({ message: 'Lỗi server', error: err.message });
+        res.status(500).json({ message: 'Lỗi server', error: err.message });
     }
 };
 
